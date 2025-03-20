@@ -1,9 +1,8 @@
-import styles from "./shop_top.module.css";
+import styles from "../category.module.css";
 import "@/public/TeamB_Icon/style.css";
-import Carousel from "../../../components/shop/carousel";
-import Card from "../../../components/shop/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import InfiniteCard from "@/components/shop/infinite-card";
 
 export default function TopPage() {
   return (
@@ -20,7 +19,7 @@ export default function TopPage() {
             <div className={styles.titleBg}>
               <div className={styles.title}>上衣</div>
             </div>
-            <Carousel categoryId={1} />
+            <InfiniteCard categoryId={1}/>
 
             {/* <div className={styles.more}>
             <div className={styles.textBox}>
