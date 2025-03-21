@@ -22,6 +22,11 @@
   padding: 0 20px;
 }
 
+.notActive {
+  list-style: none;
+  text-decoration: none;
+}
+
 .notActiveText {
   border: none;
   color: #000;
@@ -76,6 +81,8 @@
 
 .titleIcon {
   height: 100%;
+  color: #3f6d62;
+  font-size: 36px;
 }
 
 .title .titleText {
@@ -160,6 +167,8 @@
   background-color: transparent;
   padding: 0px;
   margin: 0;
+  height: 50px;
+  width: 50px;
 }
 
 /* 報名按鈕 */
@@ -177,6 +186,12 @@
   background-color: #7aaa9b;
   border: 2px solid #29755d;
   color: #3f6d62;
+}
+
+.likeHeart {
+  font-size: 30px;
+  padding: 0px;
+  margin: 0px;
 }
 
 /* 活動詳情 */
@@ -200,6 +215,7 @@
 /* 商品推薦 */
 .advertise {
   background-color: #f4f4f4;
+  margin-bottom: 30px;
 }
 
 .shopTitle {
