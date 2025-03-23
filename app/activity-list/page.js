@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
-import { Modal } from "bootstrap";
 import Styles from "./activity-list.module.css";
 import "@/public/TeamB_Icon/style.css";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -23,43 +22,98 @@ export default function ActivityListPage() {
   const [selectedPeople, setSelectedPeople] = useState(1);
   const [notes, setNotes] = useState("");
   const modalRef = useRef(null);
+  const bsModal = useRef(null);
+  // 搜尋功能
+  const [searchQuery, setSearchQuery] = useState("");
+  const [originalData, setOriginalData] = useState([]);
+
+
+  // 當使用者輸入時即時搜尋
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  
+    if (query.trim() === "") {
+      setListData(originalData); // 還原完整資料
+    } else {
+      const lowerQuery = query.toLowerCase();
+      const filtered = originalData.filter((activity) => {
+        return (
+          activity.activity_name.toLowerCase().includes(lowerQuery) ||
+          activity.court_name.toLowerCase().includes(lowerQuery) ||
+          activity.name.toLowerCase().includes(lowerQuery)
+        );
+      });
+      setListData(filtered);
+    }
+  };
+  
+
+
+
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const bootstrap = require("bootstrap");
+      if (modalRef.current) {
+        bsModal.current = new bootstrap.Modal(modalRef.current);
+      }
+    }
+  }, []);
+
+    const openModal = () => {
+      if (bsModal.current) bsModal.current.show();
+    };
+    
+    const closeModal = () => {
+      if (bsModal.current) bsModal.current.hide();
+    };
+
 
     // 新增報名資料至資料庫
+    const fetchData = async () => {
+      try {
+        const r = await fetch(`${AL_LIST}`);
+        const obj = await r.json();
+        if (obj.success) {
+          setOriginalData(obj.rows);  // 儲存完整活動資料
+          setListData(obj.rows);      // 顯示在畫面上的活動資料
+        }
+      } catch (error) {
+        console.warn(error);
+      }
+    };
+    
+    // ✅ 報名送出後可以使用
     const handleRegister = async () => {
       setLoading(true);
-  
-      // 檢查 activityName 是否存在
+    
       if (!activityName || !activityName.al_id) {
         alert("請選擇活動");
         setLoading(false);
         return;
       }
-  
-      // 設定要發送的資料
+    
       const formData = {
-        member_id: 35, // 測試用，應該從登入 session 取得
-        activity_id: activityName?.al_id, // 測試用，應該根據選擇的活動變動
+        member_id: 35,
+        activity_id: activityName?.al_id,
         num: selectedPeople,
         notes: notes.trim(),
       };
+    
       try {
         const response = await fetch(ACTIVITY_ADD_POST, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
-  
+    
         const data = await response.json();
-        
+    
         if (data.success) {
-          // alert("報名成功！");
-          setNotes(""); // ✅ 清除輸入框
-          setSelectedPeople(1); // ✅ 重設人數選擇
-          // ✅ 關閉 modal
+          setNotes("");
+          setSelectedPeople(1);
           closeModal();
-          fetchRegisteredData(); // 重新載入資料
-        } else {
-          // alert("報名失敗：" + data.error);
+          await fetchData(); // 正確呼叫更新列表
         }
       } catch (error) {
         console.error("報名失敗", error);
@@ -67,35 +121,13 @@ export default function ActivityListPage() {
         setLoading(false);
       }
     };
+    
+    // 初次載入資料
+    useEffect(() => {
+      fetchData();
+    }, []);
+  console.log("data:", listData);  // end Modal 報名
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-    const fetchData = async () => {
-      try {
-        const r = await fetch(`${AL_LIST}`);
-        const obj = await r.json();
-        if (obj.success) {
-          setListData(obj.rows);
-        }
-      } catch (error) {
-        console.warn(error);
-      }
-    };
-    fetchData();
-
-  }, []);
-  console.log("data:", listData);
-
-    // Modal Debug
-    const openModal = () => {
-      const modal = document.getElementById("staticBackdrop");
-      if (modal) {
-        modal.classList.add("show");
-        modal.setAttribute("aria-hidden", "false"); // ✅ 顯示 modal
-        modal.removeAttribute("inert"); // ✅ 允許焦點移入
-      }
-    };
 
   const handleSortChange = (sortBy) => {
     const sorted = [...listData]; // 複製一份原始資料
@@ -136,6 +168,14 @@ export default function ActivityListPage() {
               活動列表
             </span>
           </ol>
+          <div className={`${Styles.selectGroup}`}>
+  <input
+    type="text"
+    placeholder="搜尋活動名稱、地點、主揪…"
+    className={Styles.searchInput}
+    onChange={(e) => handleSearch(e.target.value)}
+  />
+</div>
 
           {/* 篩選列 */}
           <div className={Styles.selectGroup}>
@@ -166,7 +206,10 @@ export default function ActivityListPage() {
             <ActivityCard
               key={i}
               activity={activity}
-              onQuickSignUp={setActivityName}
+              onQuickSignUp={(activity) => {
+                setActivityName(activity); // 設定活動資料
+                openModal();
+              }}
             />
           ))
         ) : (
@@ -277,7 +320,7 @@ export default function ActivityListPage() {
                     type="text"
                     name=""
                     id=""
-                    defaultValue={`報名費用: 總計 ${
+                    value={`報名費用: 總計 ${
                       activityName?.payment
                         ? activityName?.payment * selectedPeople
                         : 0
@@ -289,6 +332,7 @@ export default function ActivityListPage() {
                     name=""
                     id=""
                     placeholder="備註:ex 3男2女 (填)"
+                    value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                   />
                   <div className="modal-footer">
