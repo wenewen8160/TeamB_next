@@ -1,16 +1,29 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, } from "react";
 import styles from "@/styles/Header.module.css";
 import Navbar from "./Navbar"; // 引入 Navbar 組件
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "../public/src/assets/iconLogo.png";
+import { useAuth } from '../context/auth-context';  // 引入 useAuth
+import { useRouter } from "next/navigation";
+
+
+
 
 const Header = () => {
+  const { auth, logout } = useAuth();  
   const [isNavbarOpen, setIsNavbarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef(null);
+  const router = useRouter();
+
+
+  const handleLogout = () => {
+    logout(); // 調用 logout 函數來清除 auth 和 localStorage
+    router.push('/auth/login'); // 登出後，導向登入頁
+  };
 
   // 🔹 點擊外部時關閉搜尋框
   useEffect(() => {
@@ -36,6 +49,10 @@ const Header = () => {
               <Image src={Logo} alt="TeamB Logo" priority />
             </Link>
           </div>
+
+          <div
+  className={`${styles.navbarActions} ${isSearchOpen ? styles.searching : ""}`}
+>
           <div className={styles.actionsContainer}>
           {/* 搜尋、購物車、登入按鈕 */}
           <div className={styles.navbarActions}>
@@ -57,6 +74,25 @@ const Header = () => {
 
             <Link href="#"><span className={`icon-Cart ${styles.iconCart}`}></span></Link>
             <Link href="#"><span className={`icon-User ${styles.iconUser}`}></span></Link>
+            {auth.token ? (
+              <>
+                <button
+                  className={styles.quickActionBtn}
+                  onClick={handleLogout}
+                >
+                  登出
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className={styles.quickActionBtn}
+                  onClick={() => window.location.href = "/auth/login"}
+                >
+                  登入
+                </button>
+              </>
+            )}
             <Link href="/activity-create">
             <button className={styles.quickActionBtn}>快速開團</button>
             </Link>
@@ -72,6 +108,7 @@ const Header = () => {
               <span className="icon-Dropdown"></span>
             </button>
           </div>
+        </div>
         </div>
         </div>
       </header>
