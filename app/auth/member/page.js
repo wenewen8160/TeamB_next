@@ -41,6 +41,7 @@ const Member = () => {
   const [selectedPeople, setSelectedPeople] = useState(1); // 新增：選擇報名人數
   const [notes, setNotes] = useState(""); // 新增：備註
   const [loading, setLoading] = useState(false); // 新增：報名中狀態
+  const [afterRegisterCallback, setAfterRegisterCallback] = useState(null);
 
   const openModal = (activity) => {
     setActivityName(activity); // 設置選擇的活動名稱
@@ -84,6 +85,10 @@ const Member = () => {
       if (data.success) {
         setNotes("");
         setSelectedPeople(1);
+        if (typeof afterRegisterCallback === "function") {
+          afterRegisterCallback(); // ✅ 子層的 setIsRegistered(true)
+          setAfterRegisterCallback(null); // 清空，避免下次誤用
+        }
         closeModal();
         fetchRegisteredActivities(auth.id);// 重新獲取已報名的活動資料
       }
@@ -249,14 +254,14 @@ const Member = () => {
           <div className={styles.profileHeader}>
             {/* 會員的 Avatar */}
             <img
-              src={
-                auth?.avatar
-                  ? `${AVATAR_PATH}/${auth.avatar}`
-                  : `${AVATAR_PATH}/imgs/main.png`
-              }
-              alt="User Avatar"
-              className={styles.avatar}
-            />
+  src={
+    auth?.avatar?.startsWith("http")
+      ? auth.avatar // 如果是 http 開頭，代表是外部網址（例如 Google 頭貼）
+      : `${AVATAR_PATH}/${auth?.avatar || "imgs/main.png"}` // 否則用內部預設圖
+  }
+  alt="User Avatar"
+  className={styles.avatar}
+/>
             <div className={styles.userInfo}>
               <h2>{auth?.name || "未命名使用者"}</h2>
               <p>
@@ -309,7 +314,11 @@ const Member = () => {
                   <ActivityCardRegistered
                     key={activity.registered_id}
                     activity={activity}
-                    onQuickSignUp={openModal}
+                    onQuickSignUp={(activity, onRegisteredCallback) => {
+                      setActivityName(activity);
+                      setAfterRegisterCallback(() => onRegisteredCallback); // 儲存子層傳來的 callback
+                      if (bsModal.current) bsModal.current.show();
+                    }}
                     onRefresh={() => fetchRegisteredActivities(auth.id)}
                     onLikeToggle={() => {
                       fetchRegisteredActivities(auth.id);
@@ -354,7 +363,10 @@ const Member = () => {
                       fetchFavoriteActivities(auth.id);
                     }}
                     isExpired={isExpired(activity.activity_time)}
-                    onQuickSignUp={openModal}
+                    onQuickSignUp={(activity, onRegisteredCallback) => {
+                      openModal(activity); // 打開 modal
+                      setAfterRegisterCallback(() => onRegisteredCallback); // 父層也要加 useState 儲存這個
+                    }}
                   />
                 ))
               ) : (
