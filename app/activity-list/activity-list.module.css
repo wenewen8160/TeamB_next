@@ -146,7 +146,8 @@
 
   .avatarImage {
     width: 100%;
-    height: 100%;
+    /* height: 100%; */
+    aspect-ratio: 1 / 1; 
     object-fit: cover;
     border-radius: 10px;
   }
@@ -450,6 +451,7 @@
   font-weight: bold;
   padding: 5px;
   border-radius: 5px;
+  z-index: 10;
 }
 
 .deleteButton {
@@ -527,6 +529,37 @@
   }
   }
 
+@media screen and (max-width: 768px){
+  .card{
+    margin-bottom: 2%;
+  }
+
+  .img {
+    width: 20%;
+  }
+  .groupButton {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px; /* ✅ 主要是這個 gap 會讓子項目之間有距離 */
+  }
+
+  .buttonWrapper {
+    margin: 4px 0; /* ✅ 每個按鈕上下留白 */
+    width: 45%;     /* ✅ 按鈕寬度一致，兩個一排 */
+    display: flex;
+    justify-content: center;
+  }
+  .joinButton {
+    width: 100%;            /* ✅ 按鈕撐滿 .buttonWrapper，避免被擠壓 */
+  }
+}
+
+@media screen and (max-width: 767px){
+  .registerInfo{
+    display: none;
+  }
+}
+
 
 @media screen and (max-width: 481px){
   /* 整體排版 */
@@ -541,6 +574,10 @@
 
   .top{
     display: block;
+  }
+
+  .registerInfo{
+    display: none;
   }
 
   .advancedOptions{
@@ -587,6 +624,7 @@
 
   .img{
     position: relative;
+    overflow: hidden;
     width: 30%;
   }
 
